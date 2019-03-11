@@ -5,12 +5,12 @@ import pickle
 
 print("Each pickle file here is a list of english tweets for the given hour of the day.\n")
 
+if not os.path.exists("result"):
+    os.mkdir("result")
+
 folders = [ item for item in os.listdir() if not item == "decompressor.py" and not item == "result" and not item == "backup" ]
 
 totalcount = 0
-
-if not os.path.exists("result"):
-    os.mkdir("result")
 
 for folder in folders:
     zipfiles = [ item for item in os.listdir(folder) if item[-4:] == ".bz2" ]
