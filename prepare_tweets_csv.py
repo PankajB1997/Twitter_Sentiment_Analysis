@@ -16,7 +16,7 @@ with open(CSV_SAVEPATH, "a") as csvfile:
 
     for path in PKL_PATHS:
         for pickle_filepath in os.listdir(path):
-            tweets_current_pkl = pickle.load(open(path, pickle_filepath, "rb"))
+            tweets_current_pkl = pickle.load(open(os.path.join(path, pickle_filepath), "rb"))
             pd.DataFrame(tweets_current_pkl).to_csv(csvfile, sep=",", header=False, index=False, encoding="utf-8")
             size += len(tweets_current_pkl)
 
