@@ -9,4 +9,4 @@ This is consolidated from multiple sources, including [an online twitter archive
 To consolidate the entire dataset into one large CSV file, simply clone this repo and run `python prepare_tweets_csv.py`  
   
 In order to open the large CSV file after running the python script:  
-`tweets_csv = pd.read_csv(open("tweets_large_32M.csv", "rU", encoding="utf-8"), header=None, index_col=None)`  
+`tweets_csv = pandas.read_csv(open("tweets_large_32M.csv", "rU", encoding="utf-8"), header=None, index_col=None)`  
