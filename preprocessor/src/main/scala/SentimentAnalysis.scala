@@ -115,5 +115,10 @@ object SentimentAnalysis {
       .setMetricName("accuracy")
     val accuracy = evaluator.evaluate(predictions)
     println("Test Error = " + (1.0 - accuracy))
+
+    // Save model
+//    model.write.overwrite().save("/tmp/spark-random-forest-model")
+    // Load model
+//    val sameModel = PipelineModel.load("/tmp/spark-logistic-regression-model")
   }
 }
