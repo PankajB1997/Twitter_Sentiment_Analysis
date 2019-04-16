@@ -1,0 +1,7 @@
+sentiment_analysis/.idea/
+sentiment_analysis/project/
+sentiment_analysis/target/
+*.xml
+*.zip
+*.jar
+.DS_Store
