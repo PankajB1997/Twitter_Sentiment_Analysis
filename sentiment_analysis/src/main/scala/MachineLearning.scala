@@ -8,10 +8,7 @@ object MachineLearning {
 
     spark.sparkContext.setLogLevel("ERROR")
 
-//    // on local machine
-//    val root = "src/main/resources/"
-    // on spark cluster
-    val root = "dbfs:/FileStore/ml/"
+    val root = "src/main/resources/"
 
     var df = spark.read.format("csv").option("header", "true").
       load(root.concat(args(0)))
@@ -74,6 +71,6 @@ object MachineLearning {
       model.save(root.concat("model_".concat(label)))
       println(label.concat(" accuracy is " + accuracy))
     }
-    // predicted_results.foreach(println)
+    predicted_results.foreach(println)
   }
 }
