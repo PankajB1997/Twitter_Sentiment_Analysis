@@ -1,3 +1,11 @@
+import org.apache.spark.ml.{Pipeline, PipelineStage}
+import org.apache.spark.ml.classification._
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.feature.{HashingTF, IDF, StandardScaler, Tokenizer}
+import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+
 object MachineLearning {
 
   def main(args: Array[String]): Unit = {

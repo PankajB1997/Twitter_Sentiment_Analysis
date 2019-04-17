@@ -1,7 +1,14 @@
+import org.apache.spark.ml.tuning.CrossValidatorModel
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions._
+import java.util.Properties
+import org.apache.spark.sql.types.{StructField, StructType, StringType, LongType}
+import scala.util.matching.Regex
+
 object EndToEnd {
 
   def main(args: Array[String]): Unit = {
-    val hashtag = "ucl" // Indicates the set of tweets being tested on; save table name using this hashtag
+    val hashtag = "got2" // Indicates the set of tweets being tested on; save table name using this hashtag
 
     val spark = SparkSession.builder.
       master("local[*]")

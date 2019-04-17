@@ -1,3 +1,6 @@
+import org.apache.spark.sql.SparkSession
+import scala.util.matching.Regex
+
 object Preprocessor {
 
   def setupLogging() = {
