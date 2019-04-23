@@ -8,8 +8,7 @@ import scala.util.matching.Regex
 object EndToEnd {
 
   def main(args: Array[String]): Unit = {
-    val hashtag = "got2" // Indicates the set of tweets being tested on; save table name using this hashtag
-
+    // Initialize Spark Session
     val spark = SparkSession.builder.
       master("local[*]")
       .appName("EndToEnd")
@@ -17,8 +16,12 @@ object EndToEnd {
       .enableHiveSupport()
       .getOrCreate()
     import spark.implicits._
-
     spark.sparkContext.setLogLevel("ERROR")
+
+    // Initialize constant hashtag;
+    // Indicates the set of tweets being tested on;
+    // Also save table name using this hashtag
+    val hashtag = "got"
 
     // Step 1: Load the CSV file
 
@@ -27,63 +30,39 @@ object EndToEnd {
       .option("inferSchema", "true")
       .csv("src/main/resources/" + hashtag + "_df.csv")
       .map(x => x.toString()).rdd
-    println(lines.count())
 
     // Step 2: Applying preprocessing on the raw tweets
 
     val stopWords = spark.sparkContext.textFile("src/main/resources/stopwords.txt")
-
     val pattern = new Regex(Utility.REG_CAMELCASE)
-
     // Removing the @words
     val parsedHash = lines.map(x => x.replaceAll(Utility.REG_HANDLERS, ""))
-    println(parsedHash.count())
-
     // Removing the links
     val parsedLinks = parsedHash.map(x => x.replaceAll(Utility.REG_LINKS, ""))
-    println(parsedLinks.count())
-
     // Removing punctuations
     val parsedPunctuations = parsedLinks.map(x => x.replaceAll(Utility.REG_PUNCTUATIONS, ""))
-    println(parsedPunctuations.count())
-
     // Splitting camelCase
     val parsedCamelCase = parsedPunctuations.map(x => (pattern findAllIn x).mkString(" "))
-    println(parsedCamelCase.count())
-
     // Lowercase
     val parsedLowercase = parsedCamelCase.map(x => x.toLowerCase)
-    println(parsedLowercase.count())
-
     // Expanding contractions
     val parsedContractions = parsedLowercase.map(x => x.split(" ")
       .map(y => if (Utility.contractions.contains(y)) Utility.contractions(y) else y).mkString(" "))
-    println(parsedContractions.count())
-
     // Removing stopWords
     val broadcastStopWords = spark.sparkContext.broadcast(stopWords.collect.toSet)
     val parsedStopWords = parsedContractions.map(x => x.split(" ")
       .map(y => if (!broadcastStopWords.value.contains(y)) y else "").mkString(" "))
-    println(parsedStopWords.count())
-
     // Removing extra whitespaces
     val parsedWhitespaces = parsedStopWords.map(x => x.replaceAll(Utility.REG_WHITESPACES, " "))
-    println(parsedWhitespaces.count())
-
     // Trimming the string
     val parsedTrim = parsedWhitespaces.map(x => x.trim())
-    println(parsedTrim.count())
-
     // Removing empty tweets
     val parsedEmpty = parsedTrim.filter(x => x.length > 0)
-    println(parsedEmpty.count())
 
     // Step 3 and 4: Load pretrained models and get predictions
 
     var preds: Array[DataFrame] = Array()
-
     val df = parsedEmpty.toDF("tweet")
-
     for (label <- Utility.LABELS) {
       val model = CrossValidatorModel.load("src/main/ml/model_lr_1.5M_" + label)
       val predictions = model.transform(df)
@@ -103,9 +82,7 @@ object EndToEnd {
     val trust_preds = preds(7).select("trust_pred").toDF("trust").withColumn("id", monotonically_increasing_id())
     val negative_preds = preds(8).select("negative_pred").toDF("negative").withColumn("id", monotonically_increasing_id())
     val positive_preds = preds(9).select("positive_pred").toDF("positive").withColumn("id", monotonically_increasing_id())
-
     val id: Seq[String] = Array("id")
-
     val predictions = parsedEmpty_res.join(anger_preds, id, "outer")
       .join(anticipation_preds, id, "outer")
       .join(disgust_preds, id, "outer")
@@ -124,8 +101,7 @@ object EndToEnd {
     val jdbcPassword = "twitter_CS4225"
     val jdbcHostname = "cs4225.database.windows.net"
     val jdbcPort = 1433
-    val jdbcDatabase ="twitter_CS4225"
-
+    val jdbcDatabase = "twitter_CS4225"
     val jdbc_url = s"jdbc:sqlserver://${jdbcHostname}:${jdbcPort};database=${jdbcDatabase};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=60;"
     val connectionProperties = new Properties()
     connectionProperties.put("user", s"${jdbcUsername}")
@@ -137,15 +113,12 @@ object EndToEnd {
 
     val fields = Array(StructField("tweet", StringType, nullable = true))
     val schema = StructType(fields)
-
     val tweets = spark.createDataFrame(predictions.select("tweet").rdd, schema)
-
     val wordcounts = tweets.withColumn("word", explode(split(col("tweet"), " ")))
       .groupBy("word")
       .count()
       .sort($"count".desc)
       .take(150)
-
     wordcounts.foreach(println)
 
     // Step 8: Write word count results to Azure Spark SQL database table for that hashtag ("hashtag_wordcount")
